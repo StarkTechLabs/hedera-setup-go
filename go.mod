@@ -3,7 +3,7 @@ module github.com/StarkTechLabs/hedera-setup-go
 go 1.17
 
 require (
-	github.com/hashgraph/hedera-sdk-go v0.9.4
+	github.com/hashgraph/hedera-sdk-go/v2 v2.1.3
 	github.com/pkg/errors v0.9.1
 )
 
