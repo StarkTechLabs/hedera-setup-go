@@ -76,6 +76,20 @@ func main() {
 		}
 
 		os.Exit(0)
+	case "account-balance":
+		cmd := flag.NewFlagSet("create-account", flag.ExitOnError)
+		cmdNetwork := cmd.String("network", "testnet", "hedera network")
+		cmdOperatorAccount := cmd.String("operator-account", "", "the operator account id")
+		cmdOperatorPrivateKey := cmd.String("operator-private-key", "", "the operator private key")
+		cmdAccountID := cmd.String("account-id", "", "hedera account id")
+
+		cmd.Parse(os.Args[2:])
+
+		if err := queryAccountBalance(ctx, cmdOperatorAccount, cmdOperatorPrivateKey, cmdAccountID, cmdNetwork); err != nil {
+			panic(err)
+		}
+
+		os.Exit(0)
 	default:
 		fmt.Println("expected subcommand")
 		os.Exit(1)
@@ -191,6 +205,40 @@ func createTopic(ctx context.Context, client *hedera.Client, operatorKey hedera.
 	fmt.Println("--------------")
 	fmt.Printf("Topic Running Hash: %s\n", string(receipt.TopicRunningHash))
 	fmt.Printf("Topic Seq Number: %d\n", receipt.TopicSequenceNumber)
+
+	return nil
+}
+
+func queryAccountBalance(ctx context.Context, cmdOperatorAccount, cmdOperatorPrivateKey, cmdAccountID, cmdNetwork *string) error {
+	operatorAccount, err := hedera.AccountIDFromString(*cmdOperatorAccount)
+	if err != nil {
+		panic(err)
+	}
+
+	operatorKey, err := hedera.PrivateKeyFromString(*cmdOperatorPrivateKey)
+	if err != nil {
+		panic(err)
+	}
+
+	hAccountID, err := hedera.AccountIDFromString(*cmdAccountID)
+	if err != nil {
+		panic(err)
+	}
+
+	client := setupClient(*cmdNetwork, operatorAccount, operatorKey)
+	if client == nil {
+		panic(errors.New("failed to create hedera client"))
+	}
+
+	query := hedera.NewAccountBalanceQuery().SetAccountID(hAccountID)
+
+	balance, err := query.Execute(client)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Account: %s\n", hAccountID.String())
+	fmt.Printf("Balance: %s\n", balance.Hbars.String())
 
 	return nil
 }
