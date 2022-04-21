@@ -162,11 +162,6 @@ func createAccount(ctx context.Context, client *hedera.Client) error {
 func createTopic(ctx context.Context, client *hedera.Client, operatorKey hedera.PrivateKey, memo string) error {
 	fmt.Println("creating hedera topic")
 
-	adminKey, err := hedera.GeneratePrivateKey()
-	if err != nil {
-		return errors.Wrap(err, "failed to generate a private topic admin key.")
-	}
-
 	submitKey, err := hedera.GeneratePrivateKey()
 	if err != nil {
 		return errors.Wrap(err, "failed to generate a private topic submit key.")
@@ -175,8 +170,8 @@ func createTopic(ctx context.Context, client *hedera.Client, operatorKey hedera.
 	// Build the Topic Create transaction, setting the keypairs we will use as well as some required values
 	txn := hedera.NewTopicCreateTransaction().
 		SetTopicMemo(memo).
-		SetAutoRenewAccountID(client.GetOperatorAccountID()).
-		SetAdminKey(adminKey.PublicKey())
+		SetAdminKey(client.GetOperatorPublicKey()).
+		SetSubmitKey(submitKey.PublicKey())
 
 	fmt.Println("executing topic transaction")
 
@@ -200,8 +195,6 @@ func createTopic(ctx context.Context, client *hedera.Client, operatorKey hedera.
 	fmt.Printf("Topic ID: %s\n", topicID.String())
 	fmt.Println("--------------")
 	fmt.Printf("Topic Submit Key: %s\n", submitKey.String())
-	fmt.Println("--------------")
-	fmt.Printf("Topic Admin Key: %s\n", adminKey.String())
 	fmt.Println("--------------")
 	fmt.Printf("Topic Running Hash: %s\n", string(receipt.TopicRunningHash))
 	fmt.Printf("Topic Seq Number: %d\n", receipt.TopicSequenceNumber)
