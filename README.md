@@ -13,7 +13,6 @@ go run cmd/main.go create-account \
 ```
 
 ### create topic
-haven't tested yet
 ```bash
 go run cmd/main.go create-topic \
     -network testnet \
