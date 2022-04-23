@@ -29,3 +29,13 @@ go run cmd/main.go account-balance \
     -operator-private-key $PRIVATE_KEY \
     -account-id <account_id_to_query>
 ```
+
+### submit message to given topic
+```bash
+go run cmd/main.go submit-topic-messsage \
+    -network testnet \
+    -operator-account $ACCOUNT_ID \
+    -operator-private-key $PRIVATE_KEY \
+    -topic-id $TOPIC_ID \
+    -message <message_to_publish>
+```

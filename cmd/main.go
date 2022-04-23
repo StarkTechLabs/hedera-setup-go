@@ -24,6 +24,13 @@ func main() {
 	ctOpKey := createTopicCmd.String("operator-private-key", "", "the operator private key")
 	ctMemo := createTopicCmd.String("memo", "test topic", "the memo of the topic to be created")
 
+	submitTopicMsgCmd := flag.NewFlagSet("submit-topic-messsage", flag.ExitOnError)
+	stmNetwork := submitTopicMsgCmd.String("network", "testnet", "hedera network")
+	stmOpAcc := submitTopicMsgCmd.String("operator-account", "", "the operator account id")
+	stmOpKey := submitTopicMsgCmd.String("operator-private-key", "", "the operator private key")
+	stmTopicId := submitTopicMsgCmd.String("topic-id", "", "topic id")
+	stmMsg := submitTopicMsgCmd.String("message", "test topic", "the memo of the topic to be created")
+
 	if len(os.Args) < 2 {
 		fmt.Println("expected subcommand")
 		os.Exit(1)
@@ -72,6 +79,29 @@ func main() {
 		}
 
 		if err := createTopic(ctx, client, operatorKey, *ctMemo); err != nil {
+			panic(err)
+		}
+
+		os.Exit(0)
+	case "submit-topic-messsage":
+		submitTopicMsgCmd.Parse(os.Args[2:])
+
+		operatorAccount, err := hedera.AccountIDFromString(*stmOpAcc)
+		if err != nil {
+			panic(err)
+		}
+
+		operatorKey, err := hedera.PrivateKeyFromString(*stmOpKey)
+		if err != nil {
+			panic(err)
+		}
+
+		client := setupClient(*stmNetwork, operatorAccount, operatorKey)
+		if client == nil {
+			panic(errors.New("failed to create hedera client"))
+		}
+
+		if err := submitMessage(ctx, client, operatorKey, *stmTopicId, *stmMsg); err != nil {
 			panic(err)
 		}
 
@@ -162,16 +192,16 @@ func createAccount(ctx context.Context, client *hedera.Client) error {
 func createTopic(ctx context.Context, client *hedera.Client, operatorKey hedera.PrivateKey, memo string) error {
 	fmt.Println("creating hedera topic")
 
-	submitKey, err := hedera.GeneratePrivateKey()
-	if err != nil {
-		return errors.Wrap(err, "failed to generate a private topic submit key.")
-	}
+	// submitKey, err := hedera.GeneratePrivateKey()
+	// if err != nil {
+	// 	return errors.Wrap(err, "failed to generate a private topic submit key.")
+	// }
 
 	// Build the Topic Create transaction, setting the keypairs we will use as well as some required values
 	txn := hedera.NewTopicCreateTransaction().
 		SetTopicMemo(memo).
-		SetAdminKey(client.GetOperatorPublicKey()).
-		SetSubmitKey(submitKey.PublicKey())
+		SetAdminKey(client.GetOperatorPublicKey())
+		// SetSubmitKey(submitKey.PublicKey())
 
 	fmt.Println("executing topic transaction")
 
@@ -194,10 +224,40 @@ func createTopic(ctx context.Context, client *hedera.Client, operatorKey hedera.
 	fmt.Println("Topic created.")
 	fmt.Printf("Topic ID: %s\n", topicID.String())
 	fmt.Println("--------------")
-	fmt.Printf("Topic Submit Key: %s\n", submitKey.String())
+	// fmt.Printf("Topic Submit Key: %s\n", submitKey.String())
 	fmt.Println("--------------")
 	fmt.Printf("Topic Running Hash: %s\n", string(receipt.TopicRunningHash))
 	fmt.Printf("Topic Seq Number: %d\n", receipt.TopicSequenceNumber)
+
+	return nil
+}
+
+func submitMessage(ctx context.Context, client *hedera.Client, operatorKey hedera.PrivateKey, topicID, message string) error {
+	fmt.Println("submitting message to hedera topic")
+
+	tid, err := hedera.TopicIDFromString(topicID)
+	if err != nil {
+		return err
+	}
+
+	submitMessage, err := hedera.NewTopicMessageSubmitTransaction().
+		SetMessage([]byte(message)).
+		SetTopicID(tid).
+		Execute(client)
+
+	if err != nil {
+		return err
+	}
+
+	//Get the transaction receipt
+	receipt, err := submitMessage.GetReceipt(client)
+	if err != nil {
+		return err
+	}
+
+	//Log the transaction status
+	transactionStatus := receipt.Status
+	fmt.Println("The transaction message status " + transactionStatus.String())
 
 	return nil
 }
