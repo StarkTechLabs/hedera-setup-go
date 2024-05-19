@@ -24,7 +24,7 @@ func main() {
 	ctOpKey := createTopicCmd.String("operator-private-key", "", "the operator private key")
 	ctMemo := createTopicCmd.String("memo", "test topic", "the memo of the topic to be created")
 
-	submitTopicMsgCmd := flag.NewFlagSet("submit-topic-messsage", flag.ExitOnError)
+	submitTopicMsgCmd := flag.NewFlagSet("submit-topic-message", flag.ExitOnError)
 	stmNetwork := submitTopicMsgCmd.String("network", "testnet", "hedera network")
 	stmOpAcc := submitTopicMsgCmd.String("operator-account", "", "the operator account id")
 	stmOpKey := submitTopicMsgCmd.String("operator-private-key", "", "the operator private key")
@@ -33,6 +33,7 @@ func main() {
 
 	if len(os.Args) < 2 {
 		fmt.Println("expected subcommand")
+		fmt.Printf("Args: %v", os.Args)
 		os.Exit(1)
 	}
 
@@ -83,7 +84,7 @@ func main() {
 		}
 
 		os.Exit(0)
-	case "submit-topic-messsage":
+	case "submit-topic-message":
 		submitTopicMsgCmd.Parse(os.Args[2:])
 
 		operatorAccount, err := hedera.AccountIDFromString(*stmOpAcc)

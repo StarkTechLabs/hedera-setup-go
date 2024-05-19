@@ -32,7 +32,7 @@ go run cmd/main.go account-balance \
 
 ### submit message to given topic
 ```bash
-go run cmd/main.go submit-topic-messsage \
+go run cmd/main.go submit-topic-message \
     -network testnet \
     -operator-account $ACCOUNT_ID \
     -operator-private-key $PRIVATE_KEY \
